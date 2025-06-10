@@ -26,7 +26,7 @@ st.title("🌫️ 지역별 대기질 등급 확인")
 sido = st.selectbox("시/도를 선택하세요", ["서울", "부산", "대구", "인천", "광주", "대전", "울산"])
 
 # API 요청
-API_KEY = "여기에_발급받은_API_KEY_입력"
+KEY = st.secrets['API_KEY']
 url = f"http://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty"
 params = {
     "sidoName": sido,
