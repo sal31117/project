@@ -2,7 +2,6 @@ import streamlit as st
 import requests
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
 
 # 등급 분류 함수
 def get_grade(value, pm_type='pm10'):
@@ -23,12 +22,14 @@ def get_grade(value, pm_type='pm10'):
         else:
             return "나쁨"
 
-# 사용자 입력
+# Streamlit 앱 제목
 st.title("🌫️ 지역별 대기질 등급 확인")
+
+# 사용자 입력 (시/도 선택)
 sido = st.selectbox("시/도를 선택하세요", ["서울", "부산", "대구", "인천", "광주", "대전", "울산"])
 
 # API 요청
-API_key = st.secrets['API_key']
+API_key = st.secrets['API_key']  # .streamlit/secrets.toml에 API_key를 저장해두세요.
 url = f"http://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty"
 params = {
     "sidoName": sido,
@@ -53,47 +54,28 @@ if res.status_code == 200:  # HTTP 요청 성공 시
         df["PM10 등급"] = df["pm10Value"].apply(lambda x: get_grade(x, 'pm10'))
         df["PM2.5 등급"] = df["pm25Value"].apply(lambda x: get_grade(x, 'pm25'))
 
-        # 날짜/시간 컬럼이 있는지 확인하고, 없으면 현재 시각으로 대체
-        if 'dataTime' in df.columns:
-            df['dataTime'] = pd.to_datetime(df['dataTime'], format='%Y-%m-%d %H:%M')
-        else:
-            df['dataTime'] = pd.to_datetime('now')
+        # 측정소별 대기질 막대그래프 시각화
+        st.write(f"### {sido}의 실시간 대기질 막대그래프")
 
-        # 측정소별 대기질 변화 시각화
-        st.write(f"### {sido}의 실시간 대기질 변화")
-
-        # 측정소별로 그래프 그리기
         fig, ax = plt.subplots(figsize=(12, 6))
-        station_list = df['stationName'].unique()
-        colors = plt.cm.tab20.colors  # 최대 20개의 색상 지원
-
-        for i, station in enumerate(station_list):
-            station_data = df[df['stationName'] == station].sort_values('dataTime')
-            color = colors[i % len(colors)]
-            ax.plot(station_data['dataTime'], station_data['pm10Value'],
-                    label=f"{station} (PM10)", marker='o', linestyle='-', color=color)
-            ax.plot(station_data['dataTime'], station_data['pm25Value'],
-                    label=f"{station} (PM2.5)", marker='x', linestyle='--', color=color)
-
-        ax.set_xlabel('시간')
+        bar_width = 0.35
+        x = range(len(df['stationName']))
+        ax.bar(x, df['pm10Value'], bar_width, label='PM10', color='skyblue')
+        ax.bar([i + bar_width for i in x], df['pm25Value'], bar_width, label='PM2.5', color='salmon')
+        ax.set_xticks([i + bar_width / 2 for i in x])
+        ax.set_xticklabels(df['stationName'], rotation=45, ha='right')
         ax.set_ylabel('농도 (㎍/㎥)')
-        ax.set_title(f'{sido} 지역의 PM10 및 PM2.5 시간대별 변화')
-
-        # 범례 위치 조정
-        ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
+        ax.set_title(f'{sido} 지역의 실시간 대기질 (PM10 & PM2.5)')
+        ax.legend()
         fig.tight_layout()
-
-        # 시간 x축 포맷 조정
-        ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
-        ax.xaxis.set_major_locator(mdates.HourLocator(interval=1))
-        plt.xticks(rotation=45)
 
         st.pyplot(fig)
 
+        # 데이터 테이블 출력
         st.write(f"### {sido}의 실시간 대기질 정보")
         st.dataframe(df[["stationName", "pm10Value", "PM10 등급", "pm25Value", "PM2.5 등급"]])
 
-    except ValueError:
-        st.error("응답 데이터 형식에 오류가 발생했습니다.")
+    except Exception as e:
+        st.error(f"데이터 처리 중 오류가 발생했습니다: {e}")
 else:
     st.error(f"API 요청에 실패했습니다. 상태 코드: {res.status_code}")
