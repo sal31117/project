@@ -55,25 +55,33 @@ if res.status_code == 200:  # HTTP 요청 성공 시
 
         # 날짜/시간 컬럼이 있는지 확인하고, 없으면 현재 시각으로 대체
         if 'dataTime' in df.columns:
-            df['dataTime'] = pd.to_datetime(df['dataTime'], format='%Y-%m-%d %H:%M')  # 데이터에 시간 정보가 있을 경우
+            df['dataTime'] = pd.to_datetime(df['dataTime'], format='%Y-%m-%d %H:%M')
         else:
-            df['dataTime'] = pd.to_datetime('now')  # 시간 정보가 없으면 현재 시각으로 대체
+            df['dataTime'] = pd.to_datetime('now')
 
         # 측정소별 대기질 변화 시각화
         st.write(f"### {sido}의 실시간 대기질 변화")
-        
+
         # 측정소별로 그래프 그리기
-        fig, ax = plt.subplots(figsize=(10, 6))
-        
-        for station in df['stationName'].unique():
-            station_data = df[df['stationName'] == station]
-            ax.plot(station_data['dataTime'], station_data['pm10Value'], label=f"PM10 - {station}", marker='o')
-            ax.plot(station_data['dataTime'], station_data['pm25Value'], label=f"PM2.5 - {station}", marker='o')
-        
+        fig, ax = plt.subplots(figsize=(12, 6))
+        station_list = df['stationName'].unique()
+        colors = plt.cm.tab20.colors  # 최대 20개의 색상 지원
+
+        for i, station in enumerate(station_list):
+            station_data = df[df['stationName'] == station].sort_values('dataTime')
+            color = colors[i % len(colors)]
+            ax.plot(station_data['dataTime'], station_data['pm10Value'],
+                    label=f"{station} (PM10)", marker='o', linestyle='-', color=color)
+            ax.plot(station_data['dataTime'], station_data['pm25Value'],
+                    label=f"{station} (PM2.5)", marker='x', linestyle='--', color=color)
+
         ax.set_xlabel('시간')
         ax.set_ylabel('농도 (㎍/㎥)')
         ax.set_title(f'{sido} 지역의 PM10 및 PM2.5 시간대별 변화')
-        ax.legend()
+
+        # 범례 위치 조정
+        ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
+        fig.tight_layout()
 
         # 시간 x축 포맷 조정
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
