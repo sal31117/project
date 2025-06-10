@@ -33,7 +33,7 @@ params = {
     "returnType": "json",
     "numOfRows": "100",
     "pageNo": "1",
-    "serviceKey": API_KEY,
+    "serviceKey": KEY,
     "ver": "1.0"
 }
 res = requests.get(url, params=params)
