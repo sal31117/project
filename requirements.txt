@@ -2,3 +2,10 @@ streamlit
 requests
 pandas
 matplotlib
+
+streamlit
+pandas
+matplotlib
+requests
+folium
+streamlit_folium
