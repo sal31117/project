@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 import pandas as pd
 import matplotlib.pyplot as plt
-import koreanize_matplotlib
+#import koreanize_matplotlib
 import folium
 from streamlit_folium import st_folium
 
