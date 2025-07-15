@@ -5,3 +5,4 @@ koreanize-matplotlib
 folium
 streamlit_folium
 requests
+koreanize-matplotlib
