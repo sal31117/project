@@ -1,0 +1,7 @@
+streamlit
+pandas
+matplotlib
+koreanize-matplotlib
+folium
+streamlit_folium
+requests
